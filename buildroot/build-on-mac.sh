@@ -111,8 +111,10 @@ if [ ! -f out/.config ] ||
 	echo "$SUM" > out/.defconfig.md5
 fi
 export KEGS_EXTRA_FILES
-# Always take the current KEGS source from the Mac
-make -s -C out BR2_DL_DIR=/work/dl kegs-dirclean
+# Always take the current KEGS source from the Mac, and the current
+#  config.txt / cmdline.txt (rpi-firmware copies them only when it is
+#  built, so without this a change to them never reached the card)
+make -s -C out BR2_DL_DIR=/work/dl kegs-dirclean rpi-firmware-dirclean
 set +e
 make -C out BR2_DL_DIR=/work/dl 2>&1 | tee /work/build.log |
 	grep --line-buffered '^>>>'

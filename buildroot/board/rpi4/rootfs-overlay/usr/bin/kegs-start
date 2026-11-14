@@ -17,19 +17,54 @@ if [ -f /kegs/kegs.env ]; then
 	done < /kegs/kegs.env
 fi
 
-# AUDIO=auto: HDMI if the screen takes sound, else the 3.5mm jack.  The
-#  screen lists its sound formats in its EDID; the Pi shows them in the ELD
-#  file as sad_count (0, or no line at all: no screen there, or no sound).
-#  There is no "monitor_present" line in these ELD files on the Pi.
+# Sound cards that exist: the names in [brackets] in /proc/asound/cards
+has_card() {
+	grep -q "^ *[0-9][0-9]* *\[$1 *\]" /proc/asound/cards 2>/dev/null
+}
+
+# AUDIO=auto: the HDMI socket the screen is on, else the 3.5mm jack.
+#  1. The screen's ELD file lists its sound formats (sad_count 1 or more).
+#  2. No ELD file (not every kernel has it): the HDMI socket the display
+#     driver says is connected.  HDMI-A-1 is vc4hdmi0, HDMI-A-2 vc4hdmi1.
+AUDIO_WHY="set in kegs.env"
 if [ "$AUDIO" = auto ]; then
-	AUDIO=Headphones
-	for eld in /proc/asound/vc4hdmi0/eld* /proc/asound/vc4hdmi1/eld*; do
-		[ -f "$eld" ] || continue
-		if grep -q 'sad_count[[:space:]]*[1-9]' "$eld"; then
-			AUDIO=$(basename "$(dirname "$eld")")
-			break
-		fi
+	AUDIO=
+	for n in 0 1; do
+		for eld in /proc/asound/vc4hdmi$n/eld*; do
+			[ -f "$eld" ] || continue
+			if grep -q 'sad_count[[:space:]]*[1-9]' "$eld" &&
+			   has_card "vc4hdmi$n"; then
+				AUDIO=vc4hdmi$n
+				AUDIO_WHY="screen on HDMI $((n + 1)) lists sound formats"
+			fi
+		done
+		[ -n "$AUDIO" ] && break
 	done
+	if [ -z "$AUDIO" ]; then
+		for n in 0 1; do
+			for st in /sys/class/drm/card*-HDMI-A-$((n + 1))/status; do
+				[ -f "$st" ] || continue
+				if [ "$(cat "$st")" = connected ] &&
+				   has_card "vc4hdmi$n"; then
+					AUDIO=vc4hdmi$n
+					AUDIO_WHY="screen connected to HDMI $((n + 1))"
+				fi
+			done
+			[ -n "$AUDIO" ] && break
+		done
+	fi
+	if [ -z "$AUDIO" ]; then
+		AUDIO=Headphones
+		AUDIO_WHY="no HDMI screen found"
+	fi
+fi
+# The chosen card must exist, or there is no sound at all: else take the
+#  first sound card there is
+if ! has_card "$AUDIO"; then
+	FIRST=$(sed -n 's/^ *[0-9][0-9]* *\[\([^] ]*\) *\].*/\1/p' \
+					/proc/asound/cards 2>/dev/null | head -n 1)
+	AUDIO_WHY="$AUDIO_WHY; no $AUDIO sound card, using ${FIRST:-none}"
+	AUDIO=${FIRST:-$AUDIO}
 fi
 
 # ALSA: send sound to the chosen card (vc4hdmi0 = HDMI, Headphones = jack)
@@ -76,11 +111,14 @@ LOG=/kegs/kegs.log
 	{
 		echo "=== $(date)  KEGS_ARGS=$KEGS_ARGS AUDIO=$AUDIO"
 		ls -l /dev/dri /kegs 2>&1
-		cat /sys/class/drm/card*-HDMI*/status 2>/dev/null
 		cat /tmp/kegs-input.txt
-		echo "AUDIO used: $AUDIO"
+		echo "AUDIO used: $AUDIO ($AUDIO_WHY)"
 		cat /proc/asound/cards
-		head -n 12 /proc/asound/vc4hdmi*/eld* 2>&1
+		ls /proc/asound /proc/asound/card* 2>&1
+		head -n 12 /proc/asound/card*/eld* 2>&1
+		for st in /sys/class/drm/card*-HDMI*/status; do
+			echo "$st: $(cat "$st")"
+		done
 		ls -la /kegs/.kegs-splash
 		cat /tmp/kegs-splash.log
 		cat /proc/fb
