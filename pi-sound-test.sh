@@ -94,7 +94,7 @@ for d in /sys/class/drm/card*-HDMI-A-*; do
 		"edid=$(wc -c < "$d/edid" 2>/dev/null) bytes"
 done
 # The ELD is what the screen told the Pi about its sound: speakers, formats
-for eld in /proc/asound/*/eld*; do
+for eld in /proc/asound/vc4hdmi*/eld* /proc/asound/*HDMI*/eld*; do
 	[ -f "$eld" ] && show "$eld"
 done
 
@@ -140,19 +140,21 @@ if [ -z "$CARDS" ]; then
 	say "The Pi shows NO sound cards at all (see /proc/asound/cards in the log)."
 fi
 say "Sound cards found: $(echo $CARDS)"
-for eld in /proc/asound/*/eld*; do
-	[ -f "$eld" ] || continue
-	card=$(basename "$(dirname "$eld")")
-	if grep -q 'monitor_present[[:space:]]*1' "$eld"; then
+for d in /sys/class/drm/card*-HDMI-A-*; do
+	[ -d "$d" ] || continue
+	say "  HDMI socket ${d##*-}: $(cat "$d/status" 2>/dev/null)"
+done
+for c in $CARDS; do
+	for eld in /proc/asound/"$c"/eld*; do
+		[ -f "$eld" ] || continue
 		name=$(sed -n 's/^monitor_name[[:space:]]*//p' "$eld")
 		sads=$(sed -n 's/^sad_count[[:space:]]*//p' "$eld")
-		say "  $card: screen \"$name\" connected, it lists $sads sound format(s)"
-		if [ "$sads" = 0 ]; then
-			say "     -> this screen says it has NO sound."
+		if [ -n "$name$sads" ]; then
+			say "  $c: screen \"$name\", sound formats it lists: ${sads:-?}"
+		else
+			say "  $c: no screen details (ELD) from this socket"
 		fi
-	else
-		say "  $card: no screen on this HDMI socket"
-	fi
+	done
 done
 say ""
 
@@ -236,14 +238,6 @@ fi
 for c in $CARDS; do
 	case "$c" in
 	vc4hdmi*|*HDMI*|*hdmi*)
-		# No screen on this HDMI socket: nothing to hear there
-		if ls /proc/asound/"$c"/eld* >/dev/null 2>&1 &&
-		   ! grep -q 'monitor_present[[:space:]]*1' \
-					/proc/asound/"$c"/eld* 2>/dev/null; then
-			say "Skipping $c: no screen on that HDMI socket."
-			say ""
-			continue
-		fi
 		test_play "HDMI ($c) - the HDMI way" "hdmi:CARD=$c,DEV=0"
 		test_play "HDMI ($c) - default for this card" "default:CARD=$c"
 		test_play "HDMI ($c) - plain hardware + conversion" \
