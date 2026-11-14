@@ -55,3 +55,4 @@ xkegs
 src/*.o
 sdcard/
 kegs-files/
+pi-sound-test.log*
