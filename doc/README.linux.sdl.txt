@@ -36,6 +36,10 @@ Raspberry Pi notes:
 - Sound goes through SDL, which uses ALSA directly on Pi OS Lite and
   PulseAudio/PipeWire on a desktop.  Your user must be in the "audio"
   group on the console.  Run with "-audio 0" to disable sound.
+- F4 > Video and Sound Setting > Sound output picks where the sound
+  goes: Auto (what the start-up script chose: the HDMI socket the screen
+  is on), HDMI 1, HDMI 2 or the 3.5mm jack.  It changes right away, and
+  is kept in config.kegs.
 - For an SD card that boots straight into KEGS with no Pi OS at all,
   see buildroot/README.md.
 

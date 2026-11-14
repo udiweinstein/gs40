@@ -36,6 +36,108 @@ extern int g_preferred_rate;
 extern int g_sound_min_samples;
 extern int g_sound_max_multiplier;
 
+// F4 Video and Sound "Sound output" (saved in config.kegs):
+//  0 Auto: whatever the start-up script chose (AUDIODEV, or ~/.asoundrc
+//    on the SD card), 1 HDMI 1, 2 HDMI 2, 3 the 3.5mm jack.
+//  The Raspberry Pi's ALSA card names; SDL's ALSA backend opens the device
+//  named in AUDIODEV.
+int	g_cfg_sound_out = 0;
+static const char *g_sdlaudio_out_dev[4] = { 0, "hdmi:CARD=vc4hdmi0,DEV=0",
+		"hdmi:CARD=vc4hdmi1,DEV=0", "plughw:CARD=Headphones,DEV=0" };
+static const char *g_sdlaudio_out_card[4] = { 0, "vc4hdmi0", "vc4hdmi1",
+							"Headphones" };
+static char	*g_sdlaudio_auto_dev = 0;	// AUDIODEV when KEGS started
+static int	g_sdlaudio_auto_saved = 0;
+
+// Set AUDIODEV for the chosen output (Auto: as it was at start-up)
+static void
+sdlaudio_set_env()
+{
+	const char *dev;
+	int	out;
+
+	if(!g_sdlaudio_auto_saved) {
+		dev = getenv("AUDIODEV");
+		g_sdlaudio_auto_dev = dev ? kegs_malloc_str(dev) : 0;
+		g_sdlaudio_auto_saved = 1;
+	}
+	out = g_cfg_sound_out;
+	if((out < 0) || (out > 3)) {
+		out = 0;
+	}
+	dev = out ? g_sdlaudio_out_dev[out] : g_sdlaudio_auto_dev;
+	if(dev) {
+		setenv("AUDIODEV", dev, 1);
+	} else {
+		unsetenv("AUDIODEV");
+	}
+	printf("SDL audio: AUDIODEV=%s\n", dev ? dev : "(not set)");
+}
+
+// Does this Pi have the ALSA sound card named card?
+static int
+sdlaudio_has_card(const char *card)
+{
+	char	line[256], name[64];
+	FILE	*fp;
+	int	num, found;
+
+	fp = fopen("/proc/asound/cards", "r");
+	if(!fp) {
+		return 0;
+	}
+	found = 0;
+	while(fgets(line, sizeof(line), fp)) {
+		if((sscanf(line, " %d [%63[^] ]", &num, name) == 2) &&
+							!strcmp(name, card)) {
+			found = 1;
+		}
+	}
+	fclose(fp);
+	return found;
+}
+
+// The Sound output line changed: close the device and open it again
+void
+sdlaudio_change_output()
+{
+	if(!g_sdlaudio_dev && !SDL_WasInit(SDL_INIT_AUDIO)) {
+		return;			// Sound is off (-audio 0)
+	}
+	sdlaudio_shutdown();
+	SDL_QuitSubSystem(SDL_INIT_AUDIO);
+	(void)sdlaudio_init();
+}
+
+// Status line under "Sound output" in F4
+char *
+cfg_sound_out_status(int get_status)
+{
+	char	buf[120];
+	const char *dev;
+	int	out;
+
+	if(!get_status) {
+		return 0;
+	}
+	out = g_cfg_sound_out;
+	if((out < 0) || (out > 3)) {
+		out = 0;
+	}
+	dev = getenv("AUDIODEV");
+	if(out && !sdlaudio_has_card(g_sdlaudio_out_card[out])) {
+		snprintf(buf, sizeof(buf), "No %s sound card on this computer",
+						g_sdlaudio_out_card[out]);
+	} else if(!g_sdlaudio_dev) {
+		snprintf(buf, sizeof(buf), "Could not open %s",
+					dev ? dev : "the default output");
+	} else {
+		snprintf(buf, sizeof(buf), "Playing on %s",
+					dev ? dev : "the default output");
+	}
+	return kegs_malloc_str(buf);
+}
+
 int
 sdlaudio_send_audio(byte *ptr, int in_size)
 {
@@ -109,6 +211,7 @@ sdlaudio_init()
 	g_sdlaudio_wr_pos = 0;
 	g_sdlaudio_playing = 0;
 
+	sdlaudio_set_env();
 	if(SDL_InitSubSystem(SDL_INIT_AUDIO) != 0) {
 		printf("SDL audio init failed: %s\n", SDL_GetError());
 		return 1;

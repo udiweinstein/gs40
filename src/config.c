@@ -79,6 +79,11 @@ extern int g_cfg_net_smb;
 extern int g_cfg_disable_splash;
 extern int g_cfg_hires_mono;
 extern word32 g_basic_cont_arg;	// UDI: basic_ext.c
+#ifdef SDL_AUDIO
+extern int g_cfg_sound_out;		// UDI: sdlaudio_driver.c
+void sdlaudio_change_output(void);
+char *cfg_sound_out_status(int get_status);
+#endif
 extern char *g_cfg_disks_dir;
 extern char g_compile_time[];
 
@@ -330,6 +335,12 @@ Cfg_menu g_cfg_video_menu[] = {
 { "Disable splash,0,No,1,Yes", KNMP(g_cfg_disable_splash), CFGTYPE_INT },
 { "  ", (void *)cfg_splash_status, 0, 0, CFGTYPE_FUNC },
 #endif
+#ifdef SDL_AUDIO
+{ "", 0, 0, 0, 0 },
+{ "Sound output,0,Auto,1,HDMI 1,2,HDMI 2,3,3.5mm jack",
+		KNMP(g_cfg_sound_out), CFGTYPE_INT },
+{ "  ", (void *)cfg_sound_out_status, 0, 0, CFGTYPE_FUNC },
+#endif
 { "", 0, 0, 0, 0 },
 { "Back to Main Config", g_cfg_main_menu, 0, 0, CFGTYPE_MENU },
 { 0, 0, 0, 0, 0 },
@@ -370,7 +381,11 @@ Cfg_menu g_cfg_main_menu[] = {
 { "ROM File Selection", g_cfg_rom_menu, 0, 0, CFGTYPE_MENU },
 { "Character ROM Selection", g_cfg_charrom_menu, 0, 0, CFGTYPE_MENU },
 { "Serial Port Configuration", g_cfg_serial_menu, 0, 0, CFGTYPE_MENU },
+#ifdef SDL_AUDIO
+{ "Video and Sound Setting", g_cfg_video_menu, 0, 0, CFGTYPE_MENU },
+#else
 { "Video Setting", g_cfg_video_menu, 0, 0, CFGTYPE_MENU },
+#endif
 #ifdef __linux__
 { "Network Configuration", g_cfg_net_menu, 0, 0, CFGTYPE_MENU },
 #endif
@@ -1073,6 +1088,11 @@ cfg_int_update(int *iptr, int new_val)
 	if(iptr == &g_cfg_hires_mono) {
 		video_force_reparse();	// redraw Hi-Res/Double Hi-Res now
 	}
+#ifdef SDL_AUDIO
+	if(iptr == &g_cfg_sound_out) {
+		sdlaudio_change_output();	// reopen on the new output
+	}
+#endif
 #ifdef __linux__
 	if(iptr == &g_cfg_net_smb) {
 		cfg_net_smb_changed();	// start/stop SMB file sharing
