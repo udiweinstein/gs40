@@ -1,13 +1,18 @@
 // basic_ext.c - New Applesoft BASIC commands for KEGS (Udi's fork)
 //
 // How it works: Applesoft sends any statement it doesn't recognize to LET
-//  ($DA46).  config.c patches the ROM so LET starts with WDM $56,$00, which
-//  lands in basic_let_trap().  If the statement is one of ours, we handle
-//  it here; otherwise we do LET's original first instruction (JSR PTRGET).
+//  ($DA46).  config.c patches the ROM so LET starts with WDM $56 ($DA46),
+//  which lands in basic_let_trap().  If the statement is one of ours, we
+//  handle it here; otherwise we do LET's original first instruction
+//  (JSR PTRGET).
 //
 // To evaluate expressions, we call Applesoft's own FRMNUM with a return
-//  address pointing back at the WDM, so we get control again afterwards
-//  (g_bx_state says where to continue).
+//  address pointing at a second WDM, at $DA48 (the third byte of the
+//  patch), which lands in basic_cont_trap(), so we get control again
+//  afterwards (g_bx_state says where to continue).  The two WDMs are told
+//  apart by their argument bytes: a statement that starts at $DA46 is
+//  always a new one, even if an Applesoft error (or Reset) left one of
+//  ours unfinished inside its ROM call.
 //
 // Applesoft tokenizes keywords anywhere in a word, so "SHGR" is stored as
 //  'S' + token HGR, "SHPLOT" as 'S' + HPLOT, "SHCOLOR=" as 'S' + HCOLOR=.
@@ -37,6 +42,7 @@ extern word32 g_c029_val_some;
 extern dword64 g_cur_dfcyc;
 
 #define BX_LET_ADDR	0xda46		// Applesoft LET (patched with WDM)
+#define BX_CONT_ADDR	0xda48		// 2nd WDM: our ROM calls return here
 #define BX_PTRGET	0xdfe3		// LET's original JSR target
 #define BX_FRMNUM	0xdd67		// Evaluate numeric expression -> FAC
 #define BX_SYNERR	0xdec9		// ?SYNTAX ERROR
@@ -80,6 +86,9 @@ static const int g_bx_max_y[2] = { 200, 192 };
 static int	g_bx_colors[2] = { 15, 15 };	// SHCOLOR, DHCOLOR
 
 static int	g_bx_state = BX_IDLE;
+// The 2 bytes after the WDM at $DA48 (set by config.c when it patches the
+//  ROM): do_wdm() gets them as its argument when one of our ROM calls returns
+word32	g_basic_cont_arg = 0xffffffff;
 static word32	g_bx_wait_stack = 0;	// Stack ptr when our ROM call returns
 static int	g_bx_out_pos = 0;
 static int	g_bx_plot_line = 0;	// Draw a line from the last point
@@ -119,13 +128,13 @@ bx_jump(word32 addr)
 	engine.kpc = (engine.kpc & 0xff0000) | (addr & 0xffff);
 }
 
-// JSR to a ROM routine; its RTS comes back to the WDM at $DA46
+// JSR to a ROM routine; its RTS comes back to the WDM at $DA48
 static void
 bx_call(word32 addr, int next_state)
 {
 	g_bx_wait_stack = engine.stack;
-	bx_push8((BX_LET_ADDR - 1) >> 8);
-	bx_push8((BX_LET_ADDR - 1) & 0xff);
+	bx_push8((BX_CONT_ADDR - 1) >> 8);
+	bx_push8((BX_CONT_ADDR - 1) & 0xff);
 	g_bx_state = next_state;
 	bx_jump(addr);
 }
@@ -623,7 +632,20 @@ bx_continue()
 	bx_error(BX_SYNERR);
 }
 
-// Called from do_wdm() for WDM $56,$00 at Applesoft LET ($DA46)
+// Called from do_wdm() for the WDM at $DA48: a ROM routine we called with
+//  bx_call() has returned.  Returns 0 if this is not ours (no call is
+//  waiting), so do_wdm() treats it like any other WDM
+int
+basic_cont_trap()
+{
+	if((g_bx_state == BX_IDLE) || (engine.stack != g_bx_wait_stack)) {
+		return 0;
+	}
+	bx_continue();
+	return 1;
+}
+
+// Called from do_wdm() for the WDM at Applesoft LET ($DA46): a new statement
 void
 basic_let_trap()
 {
@@ -631,11 +653,12 @@ basic_let_trap()
 	int	len;
 
 	if(g_bx_state != BX_IDLE) {
-		if(engine.stack == g_bx_wait_stack) {
-			bx_continue();
-			return;
+		// One of our statements never finished: an Applesoft error
+		//  (bad expression) or Reset happened inside its ROM call.
+		//  Forget it, and stop a SOUND that was still playing
+		if((g_bx_state == BX_SOUND_WAIT) && (g_bx_sound_f > 0)) {
+			bx_sound_stop();
 		}
-		// Stale: an Applesoft error happened inside our ROM call
 		g_bx_state = BX_IDLE;
 	}
 

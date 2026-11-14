@@ -85,6 +85,7 @@ const char g_kegs_version_str[] = "1.33";
 // Version of Udi's KEGS fork (shown in the F4 config title): bump it
 //  when making a new release
 const char g_kegs_fork_version_str[] = "udi-2";
+extern word32 g_basic_cont_arg;	// UDI: basic_ext.c
 
 dword64	g_last_vbl_dfcyc = 0;
 dword64	g_cur_dfcyc = 1;
@@ -1880,9 +1881,14 @@ do_cop(word32 ret)
 void
 do_wdm(word32 arg)
 {
-	if(arg == 0x0056) {
-		// UDI: Applesoft extensions, see basic_ext.c
+	if(arg == 0x4256) {
+		// UDI: WDM $56 at Applesoft LET ($DA46, followed by the WDM
+		//  below): new Applesoft commands, see basic_ext.c
 		basic_let_trap();
+		return;
+	}
+	if((arg == g_basic_cont_arg) && basic_cont_trap()) {
+		// UDI: WDM at $DA48: a ROM call made by basic_ext.c returned
 		return;
 	}
 	if(arg == 0xd8ea) {

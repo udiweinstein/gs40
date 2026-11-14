@@ -78,6 +78,7 @@ extern char *g_cfg_wifi_pass;
 extern int g_cfg_net_smb;
 extern int g_cfg_disable_splash;
 extern int g_cfg_hires_mono;
+extern word32 g_basic_cont_arg;	// UDI: basic_ext.c
 extern char *g_cfg_disks_dir;
 extern char g_compile_time[];
 
@@ -1346,13 +1347,18 @@ config_load_roms()
 
 	// UDI: Add new Applesoft commands (see basic_ext.c).  Applesoft LET is at $DA46 = JSR PTRGET (20 e3 df).
 	//  Unknown words like VER end up in LET, so replace that JSR with
-	//  WDM $56,$00 (42 56 00) and let the emulator check the statement.
+	//  WDM $56 (42 56) and let the emulator check the statement.  The
+	//  third byte is a second WDM (42), at $DA48: the ROM routines that
+	//  basic_ext.c calls return there.  Its argument is the 2 bytes
+	//  that follow it in the ROM, remembered in g_basic_cont_arg.
 	if((g_rom_fc_ff_ptr[0x3da46] == 0x20) &&
 			(g_rom_fc_ff_ptr[0x3da47] == 0xe3) &&
 			(g_rom_fc_ff_ptr[0x3da48] == 0xdf)) {
 		g_rom_fc_ff_ptr[0x3da46] = 0x42;
 		g_rom_fc_ff_ptr[0x3da47] = 0x56;
-		g_rom_fc_ff_ptr[0x3da48] = 0x00;
+		g_rom_fc_ff_ptr[0x3da48] = 0x42;
+		g_basic_cont_arg = g_rom_fc_ff_ptr[0x3da49] |
+					(g_rom_fc_ff_ptr[0x3da4a] << 8);
 		printf("Patched Applesoft LET at $DA46 for new commands\n");
 	} else {
 		printf("Applesoft LET not found at $DA46: %02x %02x %02x, "

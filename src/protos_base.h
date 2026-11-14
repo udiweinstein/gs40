@@ -928,3 +928,4 @@ void voc_update_interlace(dword64 dfcyc);
 void basic_shr_set(int on);
 void basic_text_hook(void);
 void basic_let_trap(void);
+int basic_cont_trap(void);
