@@ -40,4 +40,20 @@ if [ ! -x sdlkegs ]; then
 	echo "sdlkegs is not built yet. Run: $DIR/pi-update.sh"
 	exit 1
 fi
+
+# Sound: the Pi's default output is the 3.5mm jack.  If a screen that takes
+#  sound is on HDMI (it lists sound formats: sad_count in its ELD file),
+#  send the sound there.  Set AUDIODEV yourself to choose another output,
+#  e.g.  AUDIODEV=default:CARD=Headphones kegs
+if [ -z "$AUDIODEV" ]; then
+	for eld in /proc/asound/vc4hdmi0/eld* /proc/asound/vc4hdmi1/eld*; do
+		[ -f "$eld" ] || continue
+		if grep -q 'sad_count[[:space:]]*[1-9]' "$eld"; then
+			AUDIODEV="hdmi:CARD=$(basename "$(dirname "$eld")"),DEV=0"
+			export AUDIODEV
+			echo "Sound: $AUDIODEV"
+			break
+		fi
+	done
+fi
 exec ./sdlkegs "$@"

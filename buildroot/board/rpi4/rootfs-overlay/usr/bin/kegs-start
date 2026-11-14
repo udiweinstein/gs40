@@ -17,14 +17,15 @@ if [ -f /kegs/kegs.env ]; then
 	done < /kegs/kegs.env
 fi
 
-# AUDIO=auto: HDMI if the screen takes sound (it says so in its EDID,
-#  shown in the ELD file), else the 3.5mm jack
+# AUDIO=auto: HDMI if the screen takes sound, else the 3.5mm jack.  The
+#  screen lists its sound formats in its EDID; the Pi shows them in the ELD
+#  file as sad_count (0, or no line at all: no screen there, or no sound).
+#  There is no "monitor_present" line in these ELD files on the Pi.
 if [ "$AUDIO" = auto ]; then
 	AUDIO=Headphones
 	for eld in /proc/asound/vc4hdmi0/eld* /proc/asound/vc4hdmi1/eld*; do
 		[ -f "$eld" ] || continue
-		if grep -q 'monitor_present[[:space:]]*1' "$eld" &&
-		   ! grep -q 'sad_count[[:space:]]*0' "$eld"; then
+		if grep -q 'sad_count[[:space:]]*[1-9]' "$eld"; then
 			AUDIO=$(basename "$(dirname "$eld")")
 			break
 		fi
