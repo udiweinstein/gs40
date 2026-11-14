@@ -220,13 +220,12 @@ smb_on() {
 [global]
 	netbios name = KEGS
 	server string = KEGS Apple IIgs
-	map to guest = bad user
-	guest account = $OWNER
+	map to guest = never
 
 [disks]
 	path = $DIR
 	read only = no
-	guest ok = yes
+	guest ok = no
 	force user = $OWNER
 	force group = $GROUP
 EOF
