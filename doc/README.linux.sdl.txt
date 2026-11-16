@@ -38,8 +38,9 @@ Raspberry Pi notes:
   group on the console.  Run with "-audio 0" to disable sound.
 - F4 > Video and Sound Setting > Sound output picks where the sound
   goes: Auto (what the start-up script chose: the HDMI socket the screen
-  is on), HDMI 1, HDMI 2 or the 3.5mm jack.  It changes right away, and
-  is kept in config.kegs.
+  is on), HDMI 0, HDMI 1 (the names printed on the Pi 4 board; HDMI 0
+  is the socket next to the USB-C power) or the 3.5mm jack.  It changes
+  right away, and is kept in config.kegs.
 - For an SD card that boots straight into KEGS with no Pi OS at all,
   see buildroot/README.md.
 

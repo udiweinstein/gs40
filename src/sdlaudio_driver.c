@@ -37,8 +37,9 @@ extern int g_sound_min_samples;
 extern int g_sound_max_multiplier;
 
 // F4 Video and Sound "Sound output" (saved in config.kegs):
-//  0 Auto: whatever the start-up script chose (AUDIODEV, or ~/.asoundrc
-//    on the SD card), 1 HDMI 1, 2 HDMI 2, 3 the 3.5mm jack.
+//  0 Auto: whatever the start-up script chose (AUDIODEV), 1 HDMI 0,
+//    2 HDMI 1, 3 the 3.5mm jack.  HDMI 0 / HDMI 1 are the names printed
+//    on the Pi 4 board (HDMI 0 is the socket next to the USB-C power).
 //  The Raspberry Pi's ALSA card names; SDL's ALSA backend opens the device
 //  named in AUDIODEV.
 int	g_cfg_sound_out = 0;
@@ -109,6 +110,36 @@ sdlaudio_change_output()
 	(void)sdlaudio_init();
 }
 
+// The HDMI socket (0 or 1, as printed on the board) the screen is on,
+//  or -1.  The display driver calls them HDMI-A-1 and HDMI-A-2.
+static int
+sdlaudio_screen_hdmi()
+{
+	char	path[80], state[32];
+	FILE	*fp;
+	int	card, n;
+
+	for(n = 0; n < 2; n++) {
+		for(card = 0; card < 4; card++) {
+			snprintf(path, sizeof(path),
+				"/sys/class/drm/card%d-HDMI-A-%d/status", card, n + 1);
+			fp = fopen(path, "r");
+			if(!fp) {
+				continue;
+			}
+			state[0] = 0;
+			if(!fgets(state, sizeof(state), fp)) {
+				state[0] = 0;
+			}
+			fclose(fp);
+			if(!strncmp(state, "connected", 9)) {
+				return n;
+			}
+		}
+	}
+	return -1;
+}
+
 // Status line under "Sound output" in F4
 char *
 cfg_sound_out_status(int get_status)
@@ -128,6 +159,11 @@ cfg_sound_out_status(int get_status)
 	if(out && !sdlaudio_has_card(g_sdlaudio_out_card[out])) {
 		snprintf(buf, sizeof(buf), "No %s sound card on this computer",
 						g_sdlaudio_out_card[out]);
+	} else if(!g_sdlaudio_dev && ((out == 1) || (out == 2)) &&
+			(sdlaudio_screen_hdmi() >= 0) &&
+			(sdlaudio_screen_hdmi() != out - 1)) {
+		snprintf(buf, sizeof(buf), "No sound: the screen is on HDMI %d",
+						sdlaudio_screen_hdmi());
 	} else if(!g_sdlaudio_dev) {
 		snprintf(buf, sizeof(buf), "Could not open %s",
 					dev ? dev : "the default output");

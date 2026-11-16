@@ -337,7 +337,7 @@ Cfg_menu g_cfg_video_menu[] = {
 #endif
 #ifdef SDL_AUDIO
 { "", 0, 0, 0, 0 },
-{ "Sound output,0,Auto,1,HDMI 1,2,HDMI 2,3,3.5mm jack",
+{ "Sound output,0,Auto,1,HDMI 0,2,HDMI 1,3,3.5mm jack",
 		KNMP(g_cfg_sound_out), CFGTYPE_INT },
 { "  ", (void *)cfg_sound_out_status, 0, 0, CFGTYPE_FUNC },
 #endif

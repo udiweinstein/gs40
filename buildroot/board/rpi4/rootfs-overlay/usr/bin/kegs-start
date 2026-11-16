@@ -25,7 +25,8 @@ has_card() {
 # AUDIO=auto: the HDMI socket the screen is on, else the 3.5mm jack.
 #  1. The screen's ELD file lists its sound formats (sad_count 1 or more).
 #  2. No ELD file (not every kernel has it): the HDMI socket the display
-#     driver says is connected.  HDMI-A-1 is vc4hdmi0, HDMI-A-2 vc4hdmi1.
+#     driver says is connected.  HDMI-A-1 is vc4hdmi0, HDMI-A-2 vc4hdmi1
+#     (the sockets printed HDMI 0 and HDMI 1 on the board).
 AUDIO_WHY="set in kegs.env"
 if [ "$AUDIO" = auto ]; then
 	AUDIO=
@@ -35,7 +36,7 @@ if [ "$AUDIO" = auto ]; then
 			if grep -q 'sad_count[[:space:]]*[1-9]' "$eld" &&
 			   has_card "vc4hdmi$n"; then
 				AUDIO=vc4hdmi$n
-				AUDIO_WHY="screen on HDMI $((n + 1)) lists sound formats"
+				AUDIO_WHY="screen on HDMI $n lists sound formats"
 			fi
 		done
 		[ -n "$AUDIO" ] && break
@@ -47,7 +48,7 @@ if [ "$AUDIO" = auto ]; then
 				if [ "$(cat "$st")" = connected ] &&
 				   has_card "vc4hdmi$n"; then
 					AUDIO=vc4hdmi$n
-					AUDIO_WHY="screen connected to HDMI $((n + 1))"
+					AUDIO_WHY="screen connected to HDMI $n"
 				fi
 			done
 			[ -n "$AUDIO" ] && break
@@ -76,6 +77,9 @@ vc4hdmi*)	PCM="hdmi:CARD=$AUDIO,DEV=0" ;;	# HDMI needs the hdmi plugin
 esac
 printf 'pcm.!default "%s"\nctl.!default { type hw card "%s" }\n' \
 	"$PCM" "$AUDIO" > "$HOME/.asoundrc"
+# ...and name it in AUDIODEV too, like pi-kegs.sh on Pi OS Lite (where
+#  HDMI sound works): SDL opens it directly, without needing ~/.asoundrc
+export AUDIODEV="$PCM"
 
 export SDL_VIDEODRIVER=kmsdrm
 export SDL_AUDIODRIVER=alsa
@@ -119,6 +123,16 @@ LOG=/kegs/kegs.log
 		for st in /sys/class/drm/card*-HDMI*/status; do
 			echo "$st: $(cat "$st")"
 		done
+		# Sound: what KEGS has open (state RUNNING = playing), the
+		#  card's controls (ELD = the screen's sound formats) and
+		#  whether alsa-lib knows the "hdmi" device of vc4 cards
+		echo "--- sound: AUDIODEV=$AUDIODEV"
+		for f in /proc/asound/card*/pcm0p/sub0/status; do
+			echo "$f:"; cat "$f"
+		done
+		amixer -c "$AUDIO" contents 2>&1 | head -n 40
+		ls /usr/share/alsa/cards 2>&1 | grep -i vc4
+		aplay -L 2>&1 | grep -A1 '^hdmi'
 		ls -la /kegs/.kegs-splash
 		cat /tmp/kegs-splash.log
 		cat /proc/fb
