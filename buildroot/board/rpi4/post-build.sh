@@ -9,6 +9,10 @@ grep -q '[[:space:]]/kegs[[:space:]]' "${TARGET_DIR}/etc/fstab" || \
 	echo '/dev/mmcblk0p3	/kegs	vfat	rw,noatime,flush,umask=000,nofail	0	0' \
 		>> "${TARGET_DIR}/etc/fstab"
 
+# The program was called sdlkegs before GS40: an older build of this
+#  work folder may still have it in the target
+rm -f "${TARGET_DIR}/usr/bin/sdlkegs"
+
 # Start KEGS on the HDMI screen (tty1) instead of a login prompt, and
 # restart it if it ever quits.  The serial port keeps its login prompt
 # for debugging.
