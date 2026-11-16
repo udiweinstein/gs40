@@ -6,10 +6,10 @@
 # Use: cd src; rm -f vars; ln -s vars_linux_sdl vars; make
 # For cross builds, set SDL2_CONFIG to the target's sdl2-config.
 SDL2_CONFIG ?= sdl2-config
-TARGET = sdlkegs
+TARGET = gs40
 OBJECTS1 = sdlaudio_driver.o sdl2driver.o
 CCOPTS = -O2 -Wall -fomit-frame-pointer -DSDL_AUDIO $(shell $(SDL2_CONFIG) --cflags)
-NAME = sdlkegs
+NAME = gs40
 LD = $(CC)
 EXTRA_LIBS = $(shell $(SDL2_CONFIG) --libs) -lm
 EXTRA_SPECIALS =

@@ -374,7 +374,7 @@ Cfg_menu g_cfg_net_menu[] = {
 #endif
 
 Cfg_menu g_cfg_main_menu[] = {
-{ "KEGS Configuration", g_cfg_main_menu, 0, 0, CFGTYPE_MENU },
+{ "GS40 Configuration", g_cfg_main_menu, 0, 0, CFGTYPE_MENU },
 { "Disk Configuration", g_cfg_disk_menu, 0, 0, CFGTYPE_MENU },
 { "Disk images folder", KNMP(g_cfg_disks_dir), CFGTYPE_FILE },
 { "Joystick Configuration", g_cfg_joystick_menu, 0, 0, CFGTYPE_MENU },

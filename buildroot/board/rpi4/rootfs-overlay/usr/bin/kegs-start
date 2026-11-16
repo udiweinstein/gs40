@@ -100,9 +100,9 @@ for f in /kegs/ROM* /kegs/rom* /kegs/Rom* /kegs/*.rom /kegs/*.ROM; do
 done
 if [ "$HAVE_ROM" = 0 ]; then
 	echo
-	echo "  No IIgs ROM file on the KEGS partition."
+	echo "  No IIgs ROM file on the GS40 partition."
 	echo "  Put the SD card in a Mac or PC and copy your ROM file to the"
-	echo "  KEGS drive, named ROM (or ROM.01 / ROM.03).  Then restart."
+	echo "  GS40 drive, named ROM (or ROM.01 / ROM.03).  Then restart."
 	sleep 60
 	exit 1
 fi
@@ -174,7 +174,7 @@ ls -l /dev/input /dev/input/by-path > /tmp/kegs-input.txt 2>&1
 
 START=$(date +%s)
 # shellcheck disable=SC2086
-/usr/bin/sdlkegs $KEGS_ARGS > "$LOG" 2>&1
+/usr/bin/gs40 $KEGS_ARGS > "$LOG" 2>&1
 RC=$?
 echo "=== KEGS exited with code $RC" >> "$LOG"
 sync

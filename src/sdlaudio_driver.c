@@ -13,7 +13,7 @@
 #ifdef SDL_AUDIO
 // Ignore entire file if SDL_AUDIO is not defined!
 
-// SDL2 sound output.  Used by the SDL2 build (sdlkegs) so it needs no
+// SDL2 sound output.  Used by the SDL2 build (gs40) so it needs no
 //  PulseAudio: SDL talks to ALSA directly on a minimal system (Buildroot,
 //  Pi OS Lite), and to PulseAudio/PipeWire on a desktop.
 // Modeled after pulseaudio_driver.c: the emulator writes stereo 16-bit

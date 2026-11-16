@@ -32,7 +32,7 @@ specials:
 specials_clean:
 
 clean:
-	rm -f *.o kegsmac xkegs sdlkegs
+	rm -f *.o kegsmac xkegs gs40
 
 
 # Mac builds:
@@ -45,25 +45,25 @@ kegsmac: $(OBJECTS) $(OBJECTS1) compile_time.o $(SWIFTOBJS)
 		-Xlinker -no_deduplicate -fobjc-link-runtime \
 		-L$(SWIFT_LIBDIR) \
 		-L/usr/lib/swift
-	mkdir -p ../KEGSMAC.app/Contents/Resources/Base.lproj/
-	mkdir -p ../KEGSMAC.app/Contents/MacOS
-	mkdir -p ../KEGSMAC.app/Contents/Frameworks
-	$(PERL) cp_kegs_libs kegsmac $(SWIFT_LIBDIR) ../KEGSMAC.app/Contents/Frameworks
-	mv kegsmac ../KEGSMAC.app/Contents/MacOS/KEGSMAC
-	echo "APPL????" > ../KEGSMAC.app/Contents/PkgInfo
-	cp -f Info.plist ../KEGSMAC.app/Contents/
-	cp -f $(PROJROOT)/lib/MainMenu.nib ../KEGSMAC.app/Contents/Resources/Base.lproj/
-	cp -f $(PROJROOT)/lib/kegsudi.icns ../KEGSMAC.app/Contents/Resources/
-	touch ../KEGSMAC.app
-	#cp -f $(PROJROOT)/lib/2mg.icns ../KEGSMAC.app/Contents/Resources/
-	#cp -f $(PROJROOT)/lib/525.icns ../KEGSMAC.app/Contents/Resources/
-	#touch '../KEGSMAC.app/Icon?'
+	mkdir -p ../GS40.app/Contents/Resources/Base.lproj/
+	mkdir -p ../GS40.app/Contents/MacOS
+	mkdir -p ../GS40.app/Contents/Frameworks
+	$(PERL) cp_kegs_libs kegsmac $(SWIFT_LIBDIR) ../GS40.app/Contents/Frameworks
+	mv kegsmac ../GS40.app/Contents/MacOS/GS40
+	echo "APPL????" > ../GS40.app/Contents/PkgInfo
+	cp -f Info.plist ../GS40.app/Contents/
+	cp -f $(PROJROOT)/lib/MainMenu.nib ../GS40.app/Contents/Resources/Base.lproj/
+	cp -f $(PROJROOT)/lib/kegsudi.icns ../GS40.app/Contents/Resources/
+	touch ../GS40.app
+	#cp -f $(PROJROOT)/lib/2mg.icns ../GS40.app/Contents/Resources/
+	#cp -f $(PROJROOT)/lib/525.icns ../GS40.app/Contents/Resources/
+	#touch '../GS40.app/Icon?'
 
 # Linux SDL2 builds (no X11 required, see vars_linux_sdl):
-sdlkegs: $(OBJECTS) $(OBJECTS1) compile_time.o
+gs40: $(OBJECTS) $(OBJECTS1) compile_time.o
 	$(CC) $(CCOPTS) $(LDOPTS) $(OBJECTS) $(OBJECTS1) compile_time.o \
 		$(LDFLAGS) -o $(NAME)$(SUFFIX) $(EXTRA_LIBS)
-	mv sdlkegs ..
+	mv gs40 ..
 
 # Linux for X builds:
 xkegs: $(OBJECTS) $(OBJECTS1) compile_time.o

@@ -218,8 +218,8 @@ smb_on() {
 	PWDB=$STATE/ksmbdpwd.db
 	cat > "$CONF" <<EOF
 [global]
-	netbios name = KEGS
-	server string = KEGS Apple IIgs
+	netbios name = GS40
+	server string = GS40 Apple IIgs
 	map to guest = never
 
 [disks]

@@ -686,7 +686,7 @@ win_video_init(int mdepth)
 	printf("g_win_max_width:%d, g_win_max_height:%d\n", g_win_max_width,
 							g_win_max_height);
 
-	win_init_window(&g_mainwin_info, video_get_kimage(0), "KEGS", mdepth);
+	win_init_window(&g_mainwin_info, video_get_kimage(0), "GS40", mdepth);
 	win_init_window(&g_debugwin_info, video_get_kimage(1),
 						"KEGS Debugger", mdepth);
 

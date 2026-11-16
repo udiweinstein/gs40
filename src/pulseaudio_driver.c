@@ -225,7 +225,7 @@ pulse_audio_start_stream()
 	g_pa_sample_spec.rate = g_preferred_rate;
 	g_pa_sample_spec.channels = 2;
 	printf("Set requested rate=%d\n", g_pa_sample_spec.rate);
-	g_pa_stream_ptr = pa_stream_new(g_pa_context_ptr, "KEGS",
+	g_pa_stream_ptr = pa_stream_new(g_pa_context_ptr, "GS40",
 						&g_pa_sample_spec, 0);
 	if(!g_pa_stream_ptr) {
 		printf("pa_stream_new failed\n");
@@ -265,7 +265,7 @@ pulse_audio_do_init()
 
 	g_pa_mainloop_ptr = pa_mainloop_new();
 	g_pa_context_ptr = pa_context_new(
-			pa_mainloop_get_api(g_pa_mainloop_ptr), "KEGS");
+			pa_mainloop_get_api(g_pa_mainloop_ptr), "GS40");
 	if(!g_pa_context_ptr) {
 		printf("Pulse Audio pa_context_new() failed\n");
 		return 1;

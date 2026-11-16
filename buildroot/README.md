@@ -64,7 +64,7 @@ the serial port (GPIO 14/15, 115200 baud).
 ## Files
 
 * `configs/kegs_rpi4_defconfig` – the Buildroot configuration
-* `package/kegs/` – builds `sdlkegs` from this repository's `src/`
+* `package/kegs/` – builds `gs40` from this repository's `src/`
 * `board/rpi4/` – `config.txt`, kernel command line, partition layout,
   start-up script (`rootfs-overlay/usr/bin/kegs-start`)
 
@@ -77,6 +77,6 @@ off its "Start at login".  Then, from the repository folder:
 
 The first build takes about 30-45 minutes; after a KEGS change only KEGS
 is rebuilt (1-2 minutes).  The image is written to
-`sdcard/kegs-pi4-sdcard.img`.  The script starts OrbStack if needed and
+`sdcard/gs40-pi4-sdcard.img`.  The script starts OrbStack if needed and
 quits it again at the end.  `./buildroot/build-on-mac.sh clean` deletes
 the build files (~15-20 GB).

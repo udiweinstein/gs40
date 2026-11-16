@@ -469,6 +469,6 @@ cfg_splash_status(int get_status)
 	if(buf[0]) {
 		return net_dup(buf);
 	}
-	return net_dup("Pi 4 boot screen (before KEGS starts)");
+	return net_dup("Pi 4 boot screen (before GS40 starts)");
 }
 #endif

@@ -10,7 +10,7 @@
 # Buildroot runs inside a Linux container (as x86-64, via Rosetta on
 # Apple Silicon).  Its work files live in a Docker volume called
 # "kegs-buildroot", so later builds only redo what changed.
-# Result: sdcard/kegs-pi4-sdcard.img in this repository folder.
+# Result: sdcard/gs40-pi4-sdcard.img in this repository folder.
 #
 # Your own files for the KEGS partition (ROM, disks/ ...): put them in
 # the kegs-files folder of this repository (not stored in git) and they
@@ -126,8 +126,8 @@ if [ "$status" != 0 ]; then
 	tail -40 /work/build.log
 	exit 1
 fi
-cp out/images/sdcard.img /result/kegs-pi4-sdcard.img
+cp out/images/sdcard.img /result/gs40-pi4-sdcard.img
 INNER
 
-say "Done in $((SECONDS / 60)) min $((SECONDS % 60)) s: $REPO/sdcard/kegs-pi4-sdcard.img"
+say "Done in $((SECONDS / 60)) min $((SECONDS % 60)) s: $REPO/sdcard/gs40-pi4-sdcard.img"
 echo "Write it to a micro-SD card with Raspberry Pi Imager (Use custom)."

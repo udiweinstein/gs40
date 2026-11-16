@@ -16,16 +16,16 @@ Build:
 	ln -s vars_linux_sdl vars
 	make
 
-This creates "sdlkegs" in the top directory.  Put your ROM file and
+This creates "gs40" in the top directory.  Put your ROM file and
 config.kegs next to it (see README.ROM.files.txt), then run:
 
-	./sdlkegs
+	./gs40
 
 On the console it runs full screen.  On a desktop it opens a window;
 F11 toggles full screen there.  To force full screen set
 KEGS_FULLSCREEN=1.  To choose an SDL backend explicitly:
 
-	SDL_VIDEODRIVER=kmsdrm ./sdlkegs
+	SDL_VIDEODRIVER=kmsdrm ./gs40
 
 Raspberry Pi notes:
 - Enable the KMS graphics driver (the default on current Pi OS:
@@ -79,7 +79,7 @@ changes without building a whole SD image.  One-time setup, on the Pi:
 After pushing changes from the Mac, on the Pi:
 
 	~/kegs/pi-update.sh
-	~/kegs/sdlkegs
+	~/kegs/gs40
 
 pi-update.sh pulls from GitHub and rebuilds (about a minute on a Pi 4).
 To update and run in one step, install the "kegs" command once:
@@ -90,7 +90,7 @@ To update and run in one step, install the "kegs" command once:
 Then just type "kegs" after login: it pulls from GitHub, rebuilds only
 if there is a new version, and starts KEGS ("kegs -n" skips the update).
 
-Run sdlkegs from the Pi's own screen and keyboard, not over ssh.
+Run gs40 from the Pi's own screen and keyboard, not over ssh.
 
 Network: Wi-Fi and file sharing (F4 -> Network Configuration)
 -------------------------------------------------------------

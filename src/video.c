@@ -116,7 +116,7 @@ int	g_red_right_shift = 0;
 int	g_green_right_shift = 0;
 int	g_blue_right_shift = 0;
 
-int	g_status_enable = 1;
+int	g_status_enable = 0;
 int	g_status_enable_previous = 1;
 char	g_status_buf[MAX_STATUS_LINES][STATUS_LINE_LENGTH + 1];
 char	*g_status_ptrs[MAX_STATUS_LINES] = { 0 };

@@ -503,7 +503,7 @@ parse_argv(int argc, char **argv, int slashes_to_find)
 	(void)open("/tmp/out1", O_WRONLY | O_CREAT | O_TRUNC, 0x1b6);
 #endif
 
-	printf("Starting KEGS v%s\n", &g_kegs_version_str[0]);
+	printf("Starting GS40 (based on KEGS v%s)\n", &g_kegs_version_str[0]);
 
 	// parse arguments
 	// First, Check if KEGS_BIG_ENDIAN is set correctly
@@ -1529,7 +1529,7 @@ update_60hz(dword64 dfcyc, double dtime_now)
 
 		draw_iwm_status(2, status_buf);
 
-		snprintf(status_buf, sizeof(status_buf), " KEGS v%-6s       "
+		snprintf(status_buf, sizeof(status_buf), " GS40 v%-6s       "
 			"Press F4 for Config Menu    %s %s",
 			g_kegs_version_str, code_str1, code_str2);
 		video_update_status_line(3, status_buf);

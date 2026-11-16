@@ -516,7 +516,7 @@ x_video_init()
 		exit(-1);
 	}
 
-	x_init_window(&g_mainwin_info, video_get_kimage(0), "KEGS");
+	x_init_window(&g_mainwin_info, video_get_kimage(0), "GS40");
 	x_init_window(&g_debugwin_info, video_get_kimage(1), "KEGS Debugger");
 
 	x_create_window(&g_mainwin_info);

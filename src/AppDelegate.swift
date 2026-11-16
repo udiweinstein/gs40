@@ -300,7 +300,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 		}
 		video_set_palette()
 		kimage_ptr = video_get_kimage(Int32(0))
-		mainwin_info.set_kimage(kimage_ptr, title: "KEGS",
+		mainwin_info.set_kimage(kimage_ptr, title: "GS40",
 							delegate: self)
 		kimage_ptr = video_get_kimage(Int32(1))
 		debugwin_info.set_kimage(kimage_ptr, title: "Debugger",

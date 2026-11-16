@@ -5,7 +5,7 @@
 #   sudo ln -sf ~/kegs/pi-kegs.sh /usr/local/bin/kegs
 #   sudo ln -sf ~/kegs/pi-kegs.sh /usr/local/bin/KEGS
 #
-# Extra arguments are passed to sdlkegs.  "kegs -n" skips the update.
+# Extra arguments are passed to gs40.  "kegs -n" skips the update.
 
 DIR=$(dirname "$(readlink -f "$0")")
 cd "$DIR" || exit 1
@@ -17,12 +17,12 @@ else
 	echo "Checking for a new KEGS version..."
 	if timeout 30 git pull -q --ff-only 2>/tmp/kegs-pull.err; then
 		NEW=$(git rev-parse HEAD)
-		if [ "$OLD" != "$NEW" ] || [ ! -x sdlkegs ]; then
+		if [ "$OLD" != "$NEW" ] || [ ! -x gs40 ]; then
 			echo "New version - building:"
 			git log --oneline "$OLD..$NEW" 2>/dev/null | head -10
 			./pi-update.sh || {
 				echo "Build failed."
-				[ -x sdlkegs ] || exit 1
+				[ -x gs40 ] || exit 1
 				echo "Running the previous version in 5 seconds..."
 				sleep 5
 			}
@@ -36,8 +36,8 @@ else
 	fi
 fi
 
-if [ ! -x sdlkegs ]; then
-	echo "sdlkegs is not built yet. Run: $DIR/pi-update.sh"
+if [ ! -x gs40 ]; then
+	echo "gs40 is not built yet. Run: $DIR/pi-update.sh"
 	exit 1
 fi
 
@@ -56,4 +56,4 @@ if [ -z "$AUDIODEV" ]; then
 		fi
 	done
 fi
-exec ./sdlkegs "$@"
+exec ./gs40 "$@"

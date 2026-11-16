@@ -268,7 +268,7 @@ sdl_video_init()
 		}
 	}
 
-	sdl_init_window(&g_sdl_mainwin, video_get_kimage(0), "KEGS");
+	sdl_init_window(&g_sdl_mainwin, video_get_kimage(0), "GS40");
 	sdl_create_window(&g_sdl_mainwin);
 }
 

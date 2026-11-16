@@ -1,6 +1,6 @@
 #!/bin/sh
-# Raspberry Pi OS Lite: get the latest KEGS from GitHub and build sdlkegs.
-# Usage:  ~/kegs/pi-update.sh        (then run ~/kegs/sdlkegs)
+# Raspberry Pi OS Lite: get the latest KEGS from GitHub and build gs40.
+# Usage:  ~/kegs/pi-update.sh        (then run ~/kegs/gs40)
 # One-time setup: see doc/README.linux.sdl.txt
 set -e
 cd "$(dirname "$0")"
@@ -17,6 +17,6 @@ cd src
 cp vars_linux_sdl vars		# Linux SDL build settings (vars is the Mac one)
 trap 'git checkout -q vars' EXIT
 make clean >/dev/null
-make -j"$(nproc)" sdlkegs
+make -j"$(nproc)" gs40
 echo
-echo "Built $(cd .. && pwd)/sdlkegs - run it from the Pi's own screen and keyboard."
+echo "Built $(cd .. && pwd)/gs40 - run it from the Pi's own screen and keyboard."

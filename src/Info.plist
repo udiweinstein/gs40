@@ -9,13 +9,13 @@
 	<key>CFBundleIconFile</key>
 	<string>kegsudi</string>
 	<key>CFBundleExecutable</key>
-	<string>KEGSMAC</string>
+	<string>GS40</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.provalid.Kegs</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>Kegs</string>
+	<string>GS40</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>

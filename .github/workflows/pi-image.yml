@@ -78,19 +78,19 @@ jobs:
       - name: Compress image
         run: |
           mkdir dist
-          xz -T0 -9 -c ../out/images/sdcard.img > dist/kegs-pi4-sdcard.img.xz
+          xz -T0 -9 -c ../out/images/sdcard.img > dist/gs40-pi4-sdcard.img.xz
           ls -l dist
 
       - uses: actions/upload-artifact@v4
         with:
-          name: kegs-pi4-sdcard
-          path: dist/kegs-pi4-sdcard.img.xz
+          name: gs40-pi4-sdcard
+          path: dist/gs40-pi4-sdcard.img.xz
 
       - name: Publish release
         if: startsWith(github.ref, 'refs/tags/pi-v')
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" dist/kegs-pi4-sdcard.img.xz \
+          gh release create "$GITHUB_REF_NAME" dist/gs40-pi4-sdcard.img.xz \
             --title "KEGS for Raspberry Pi 4 ($GITHUB_REF_NAME)" \
             --notes "SD card image that boots straight into KEGS. See buildroot/README.md."

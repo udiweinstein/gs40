@@ -16,7 +16,7 @@ KEGS_DEPENDENCIES = sdl2
 KEGS_OVERRIDE_SRCDIR_RSYNC_EXCLUSIONS = \
 	--exclude buildroot --exclude output --exclude 'output-*' \
 	--exclude sdcard --exclude kegs-files --exclude '*.img' \
-	--exclude '*.app' --exclude '*.o' --exclude /sdlkegs \
+	--exclude '*.app' --exclude '*.o' --exclude /gs40 \
 	--exclude '*.gz' --exclude '*.dsk' \
 	--exclude '*.2mg' --exclude '*.po' --exclude '*.woz'
 
@@ -26,13 +26,13 @@ define KEGS_BUILD_CMDS
 	$(TARGET_MAKE_ENV) $(MAKE) -C $(@D)/src \
 		CC="$(TARGET_CC) $(TARGET_CFLAGS)" \
 		SDL2_CONFIG="$(STAGING_DIR)/usr/bin/sdl2-config" \
-		sdlkegs
+		gs40
 	$(TARGET_CC) $(TARGET_CFLAGS) -o $(@D)/kegs-splash \
 		$(@D)/src/kegs-splash.c
 endef
 
 define KEGS_INSTALL_TARGET_CMDS
-	$(INSTALL) -D -m 0755 $(@D)/sdlkegs $(TARGET_DIR)/usr/bin/sdlkegs
+	$(INSTALL) -D -m 0755 $(@D)/gs40 $(TARGET_DIR)/usr/bin/gs40
 	$(INSTALL) -D -m 0755 $(@D)/src/kegs-net.sh $(TARGET_DIR)/usr/bin/kegs-net
 	$(INSTALL) -D -m 0755 $(@D)/kegs-splash $(TARGET_DIR)/usr/bin/kegs-splash
 endef
