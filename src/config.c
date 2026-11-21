@@ -1148,40 +1148,49 @@ cfg_load_charrom()
 	}
 }
 
-// Rename the Control Panel's "Sweden" language (code 7) to "Israel", so the
-//  Display Language / Keyboard Layout menus offer Hebrew.  The text may be
-//  stored as plain or high-bit ASCII, so both forms are searched.
+// Rename the Control Panel's language 7 ("Swedish" in ROM 03, "Sweden" in
+//  other ROMs) to Hebrew, so the Display Language menu offers it.  The
+//  names are packed back to back (lengths are kept elsewhere), so the new
+//  name must be the same length.  Plain and high-bit ASCII are both searched.
 void
 config_rom_hebrew_names()
 {
-	const char *from = "Sweden";
-	const char *to = "Israel";
-	int	len, count, hi, i, j;
+	static const char *names[][2] = {
+		{ "Swedish", "Hebrew " },
+		{ "Sweden", "Israel" },
+	};
+	const char *from, *to;
+	int	len, count, hi, n, i, j;
 
-	len = (int)strlen(from);
 	count = 0;
-	for(hi = 0; hi < 2; hi++) {
-		for(i = 0; i <= 4*65536 - len; i++) {
-			for(j = 0; j < len; j++) {
-				if(g_rom_fc_ff_ptr[i + j] !=
+	for(n = 0; n < 2; n++) {
+		from = names[n][0];
+		to = names[n][1];
+		len = (int)strlen(from);
+		for(hi = 0; hi < 2; hi++) {
+			for(i = 0; i <= 4*65536 - len; i++) {
+				for(j = 0; j < len; j++) {
+					if(g_rom_fc_ff_ptr[i + j] !=
 						(byte)(from[j] | (hi << 7))) {
-					break;
+						break;
+					}
 				}
+				if(j < len) {
+					continue;
+				}
+				for(j = 0; j < len; j++) {
+					g_rom_fc_ff_ptr[i + j] =
+						(byte)(to[j] | (hi << 7));
+				}
+				printf("ROM: renamed \"%s\" to \"%s\" at "
+					"%06x\n", from, to, 0xfc0000 + i);
+				count++;
 			}
-			if(j < len) {
-				continue;
-			}
-			for(j = 0; j < len; j++) {
-				g_rom_fc_ff_ptr[i + j] = (byte)(to[j] | (hi << 7));
-			}
-			printf("ROM: renamed \"%s\" to \"%s\" at %06x\n",
-							from, to, 0xfc0000 + i);
-			count++;
 		}
 	}
 	if(count == 0) {
-		printf("ROM: \"%s\" not found; choose language 7 for "
-							"Hebrew\n", from);
+		printf("ROM: language 7 name not found; choose language 7 "
+						"for Hebrew\n");
 	}
 }
 

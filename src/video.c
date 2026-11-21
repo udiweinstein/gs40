@@ -273,8 +273,8 @@ const byte g_hebrew_font[27][8] = {
 
 extern int g_cfg_hebrew_font;
 
-// Hebrew chosen from the IIgs Control Panel (Display Language "Israel",
-//  which is ROM language code 7, renamed from "Sweden" when the ROM loads)
+// Hebrew chosen from the IIgs Control Panel (Display Language "Hebrew",
+//  ROM language code 7, renamed from "Swedish" when the ROM loads)
 int	g_cp_hebrew_disp = 0;
 
 void

@@ -252,8 +252,8 @@ STRUCT(Lzw_state) {
 /* #define PAGE2 (g_c068_statereg & 0x40) */
 #define RAMRD	(g_c068_statereg & 0x20)
 #define RAMWRT	(g_c068_statereg & 0x10)
-// IIgs Control Panel language code shown as "Israel" (Hebrew); it is
-//  code 7 ("Sweden" in the original ROM), renamed by config_rom_hebrew_names
+// IIgs Control Panel language code shown as "Hebrew"; it is code 7
+//  ("Swedish" in the original ROM), renamed by config_rom_hebrew_names
 #define CP_LANG_HEBREW	7
 
 #define RDROM	(g_c068_statereg & 0x08)
