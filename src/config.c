@@ -265,7 +265,7 @@ Cfg_menu g_cfg_rom_menu[] = {
 
 Cfg_menu g_cfg_charrom_menu[] = {
 { "Character ROM File Selection", g_cfg_charrom_menu, 0, 0, CFGTYPE_MENU },
-{ "Built-in Font,0,US English (standard),1,Hebrew (Israeli keyboard)",
+{ "Built-in Font,0,US / Control Panel language,1,Hebrew (Israeli keyboard)",
 	KNMP(g_cfg_hebrew_font), CFGTYPE_INT },
 { "Character ROM File", KNMP(g_cfg_charrom_path), CFGTYPE_FILE },
 { "Character Set,0,0x00 US Enhanced,1,0x01 US Un-enhanced,"
@@ -1148,6 +1148,43 @@ cfg_load_charrom()
 	}
 }
 
+// Rename the Control Panel's "Sweden" language (code 7) to "Israel", so the
+//  Display Language / Keyboard Layout menus offer Hebrew.  The text may be
+//  stored as plain or high-bit ASCII, so both forms are searched.
+void
+config_rom_hebrew_names()
+{
+	const char *from = "Sweden";
+	const char *to = "Israel";
+	int	len, count, hi, i, j;
+
+	len = (int)strlen(from);
+	count = 0;
+	for(hi = 0; hi < 2; hi++) {
+		for(i = 0; i <= 4*65536 - len; i++) {
+			for(j = 0; j < len; j++) {
+				if(g_rom_fc_ff_ptr[i + j] !=
+						(byte)(from[j] | (hi << 7))) {
+					break;
+				}
+			}
+			if(j < len) {
+				continue;
+			}
+			for(j = 0; j < len; j++) {
+				g_rom_fc_ff_ptr[i + j] = (byte)(to[j] | (hi << 7));
+			}
+			printf("ROM: renamed \"%s\" to \"%s\" at %06x\n",
+							from, to, 0xfc0000 + i);
+			count++;
+		}
+	}
+	if(count == 0) {
+		printf("ROM: \"%s\" not found; choose language 7 for "
+							"Hebrew\n", from);
+	}
+}
+
 void
 config_load_roms()
 {
@@ -1363,6 +1400,11 @@ config_load_roms()
 			g_rom_fc_ff_ptr[0x36cb1] = 0x18;
 		}
 
+	}
+
+	// UDI: Hebrew in the IIgs Control Panel language menus
+	if(g_rom_version >= 1) {
+		config_rom_hebrew_names();
 	}
 
 	// UDI: Add new Applesoft commands (see basic_ext.c).  Applesoft LET is at $DA46 = JSR PTRGET (20 e3 df).

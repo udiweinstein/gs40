@@ -273,6 +273,24 @@ const byte g_hebrew_font[27][8] = {
 
 extern int g_cfg_hebrew_font;
 
+// Hebrew chosen from the IIgs Control Panel (Display Language "Israel",
+//  which is ROM language code 7, renamed from "Sweden" when the ROM loads)
+int	g_cp_hebrew_disp = 0;
+
+void
+video_set_cp_language(int lang)
+{
+	int	heb;
+
+	heb = (lang == CP_LANG_HEBREW);
+	if(heb != g_cp_hebrew_disp) {
+		printf("Control Panel display language %d: Hebrew %s\n", lang,
+							heb ? "on" : "off");
+		g_cp_hebrew_disp = heb;
+		prepare_a2_font();
+	}
+}
+
 byte g_font_array[256][8] = {
 #include "kegsfont.h"
 };
@@ -1979,7 +1997,7 @@ prepare_a2_font()
 	a2_font_to_bits(g_font_array, g_a2font_bits_us);
 
 	memcpy(&font[0][0], &g_font_array[0][0], sizeof(font));
-	if(g_cfg_hebrew_font) {
+	if(g_cfg_hebrew_font || g_cp_hebrew_disp) {
 		// Hebrew //e character set: Hebrew letters take the lowercase
 		//  slots 0x60-0x7a (normal at 0xe0+, inverse at 0x60+)
 		for(i = 0; i < 27; i++) {

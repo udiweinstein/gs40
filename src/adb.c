@@ -146,6 +146,7 @@ word32	g_virtual_key_up[4];	/* bitmask of all possible 128 a2codes */
 				/* indicates which keys are up=1 by bit */
 int	g_rawa2_to_a2code[128];
 extern int g_cfg_hebrew_font;
+extern int g_cp_hebrew_disp;
 
 int	g_keypad_key_is_down[10] = { 0 };/* List from 0-9 of which keypad */
 					/*  keys are currently pressed */
@@ -675,9 +676,16 @@ adb_set_config(word32 val0, word32 val1, word32 val2)
 		g_kbd_ctl_addr = new_kbd;
 	}
 
-	if(val1) {
-		// Do nothing
+	// val1: high nibble = Display Language, low nibble = Keyboard Layout
+	//  (from the Control Panel / BRAM)
+	if(((val1 >> 4) != g_adb_char_set) ||
+				((val1 & 0xf) != g_adb_layout_lang)) {
+		printf("ADB config: display language %d, keyboard layout %d\n",
+						val1 >> 4, val1 & 0xf);
 	}
+	g_adb_char_set = (val1 >> 4) & 0xf;
+	g_adb_layout_lang = val1 & 0xf;
+	video_set_cp_language(g_adb_char_set);
 
 	tmp1 = val2 >> 4;
 	if(tmp1 == 4) {
@@ -2061,7 +2069,7 @@ adb_physical_key_update(Kimage *kimage_ptr, int raw_a2code, word32 unicode_c,
 	/*  keyboard, by physical key position, whatever the host's own */
 	/*  keyboard language: the A key types shin, T types alef, etc. */
 	/*  Shift, Caps Lock, Ctrl, Open/Closed-Apple keep plain English */
-	if(g_cfg_hebrew_font && !is_up) {
+	if((g_cfg_hebrew_font || g_cp_hebrew_disp) && !is_up) {
 		word32	mods;
 		int	heb;
 
