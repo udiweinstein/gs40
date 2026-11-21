@@ -79,27 +79,77 @@ word32	g_dapi_bank = 0;		// Data bank << 16, for this call
 int	g_dapi_list_num = 0;
 char	g_dapi_list_dir[1024];
 
-// The disk images folder as a full path, ending with '/'
+// The folder config.kegs is in, ending with '/'
+static void
+dapi_config_dir(char *buf, int len)
+{
+	char	*slash;
+
+	cfg_strncpy(buf, g_config_kegs_name, len);
+	slash = strrchr(buf, '/');
+	if(slash) {
+		slash[1] = 0;
+	} else {
+		if(!getcwd(buf, len - 2)) {
+			buf[0] = 0;
+		}
+		cfg_strlcat(buf, "/", len);
+	}
+}
+
+static int
+dapi_is_dir(const char *path)
+{
+	struct stat stat_buf;
+
+	return (stat(path, &stat_buf) == 0) &&
+				((stat_buf.st_mode & S_IFMT) == S_IFDIR);
+}
+
+// The disk images folder as a full path, ending with '/'.  It is the F4
+//  "Disk images folder" (default "disks", next to config.kegs).  If that
+//  folder does not exist: the folder of a disk image in a drive (S7, S5,
+//  S6), else the folder config.kegs is in.
 void
 kegs_disks_dir(char *buf, int len)
 {
+	Disk	*dsk;
 	char	*slash;
-	int	cur;
+	int	cur, slot, drive, max_drive;
 
 	if(g_cfg_disks_dir[0] == '/') {
 		cfg_strncpy(buf, g_cfg_disks_dir, len);
 	} else {
-		cfg_strncpy(buf, g_config_kegs_name, len);
-		slash = strrchr(buf, '/');
-		if(slash) {
-			slash[1] = 0;
-		} else {
-			if(!getcwd(buf, len - 2)) {
+		dapi_config_dir(buf, len);
+		cfg_strlcat(buf, g_cfg_disks_dir, len);
+	}
+	if(!dapi_is_dir(buf)) {
+		buf[0] = 0;
+		for(slot = 7; (slot >= 5) && !buf[0]; slot--) {
+			max_drive = (slot == 7) ? 8 : 2;
+			for(drive = 0; drive < max_drive; drive++) {
+				dsk = iwm_get_dsk_from_slot_drive(slot, drive);
+				if(!dsk || !dsk->name_ptr || (dsk->fd < 0) ||
+						!strchr(dsk->name_ptr, '/')) {
+					continue;
+				}
+				if(dsk->name_ptr[0] == '/') {
+					cfg_strncpy(buf, dsk->name_ptr, len);
+				} else {
+					dapi_config_dir(buf, len);
+					cfg_strlcat(buf, dsk->name_ptr, len);
+				}
+				slash = strrchr(buf, '/');
+				slash[1] = 0;
+				if(dapi_is_dir(buf)) {
+					break;
+				}
 				buf[0] = 0;
 			}
-			cfg_strlcat(buf, "/", len);
 		}
-		cfg_strlcat(buf, g_cfg_disks_dir, len);
+		if(!buf[0]) {
+			dapi_config_dir(buf, len);
+		}
 	}
 	cur = (int)strlen(buf);
 	if(cur && (buf[cur - 1] != '/')) {
