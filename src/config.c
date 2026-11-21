@@ -1410,6 +1410,9 @@ config_load_roms()
 
 	}
 
+	// UDI: the Disks desk accessory in the Ctrl-Cmd-Esc menu
+	disks_cda_install();
+
 	// UDI: Hebrew in the IIgs Control Panel language menus
 	if(g_rom_version >= 1) {
 		config_rom_hebrew_names();

@@ -130,6 +130,8 @@ Emustate_dword64list g_emustate_dword64list[] = {
 };
 
 extern word32 g_mem_size_total;
+extern int g_disks_cda_on;
+extern byte *g_disks_fb_mem;
 
 Emustate_word32list g_emustate_word32list[] = {
 	EMUSTATE(g_mem_size_total),
@@ -891,6 +893,12 @@ setup_pageinfo()
 	/* mark unused memory as BAD_MEM */
 	fixup_any_bank_any_page(mem_size_pages, 0xfc00-mem_size_pages,
 			BANK_BAD_MEM, BANK_BAD_MEM);
+
+	// UDI: RAM in bank $FB for the built-in Disks desk accessory
+	if(g_disks_cda_on && (mem_size_pages <= 0xfb00)) {
+		fixup_any_bank_any_page(0xfb00, 0x100, g_disks_fb_mem,
+							g_disks_fb_mem);
+	}
 
 	fixup_shadow_all_banks();
 

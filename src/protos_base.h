@@ -193,6 +193,7 @@ void cfg_int_update(int *iptr, int new_val);
 void cfg_load_charrom(void);
 void config_load_roms(void);
 void config_rom_hebrew_names(void);
+void disks_cda_install(void);
 void config_parse_config_kegs_file(void);
 void cfg_parse_one_line(char *buf, int line);
 void cfg_parse_bram(char *buf, int pos, int len);

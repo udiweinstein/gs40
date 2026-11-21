@@ -48,6 +48,7 @@
 
 #include "defc.h"
 #include <dirent.h>
+#include "disks_cda.h"	// the Disks desk accessory, from cda/build.sh
 
 // Saved in config.kegs: folder with the disk images, relative to the
 //  folder config.kegs is in, or a full path
@@ -511,4 +512,101 @@ cfg_autoexec_disk()
 	slot = cfg_guess_disk_slot(path, stat_buf.st_size);
 	printf("AUTOEXEC: insert %s into s%dd1\n", path, slot);
 	insert_disk(slot, 0, path, 0, 0, -1, 0);
+}
+
+// ---- The Disks desk accessory, built in (ROM 03) ----
+// A real IIgs has nothing in bank $FB (ROM expansion space), so GS40 puts
+//  RAM there with the Disks CDA in it: $FB0000 = its "handle" (a pointer to
+//  the CDA header at $FB0100), $FB0010 = a small routine, $FB0100 = the CDA.
+// ROM 03 installs its own Alternate Display Mode CDA at $FE/C6CB with
+//  PEA $00FE / PEA $D4B0 / LDX #$0F05 / JSL $E10000 (InstallCDA).  That is
+//  replaced by JSL $FB0010, which does the same and then installs Disks, so
+//  Disks is in the Ctrl-Cmd-Esc menu under ProDOS 8 too, like the Control
+//  Panel.
+
+#define DCDA_BASE	0x0100
+#define DCDA_STUB	0x0010
+#define DCDA_ROM_OFF	0x2c6cb		// $FE/C6CB in the 256KB ROM 03 file
+
+extern int g_rom_version;
+extern byte *g_rom_fc_ff_ptr;
+
+byte	*g_disks_fb_mem = 0;		// bank $FB, 256-byte aligned
+int	g_disks_cda_on = 0;
+
+static void
+dcda_put(word32 off, word32 val, int bytes)
+{
+	int	i;
+
+	for(i = 0; i < bytes; i++) {
+		g_disks_fb_mem[off + i] = (val >> (8*i)) & 0xff;
+	}
+}
+
+static word32
+dcda_get(word32 off, int bytes)
+{
+	word32	val;
+	int	i;
+
+	val = 0;
+	for(i = 0; i < bytes; i++) {
+		val |= g_disks_fb_mem[off + i] << (8*i);
+	}
+	return val;
+}
+
+// Called after the ROM is loaded (config_load_roms)
+void
+disks_cda_install()
+{
+	static const byte adm_install[13] = { 0xf4, 0xfe, 0x00, 0xf4, 0xb0,
+		0xd4, 0xa2, 0x05, 0x0f, 0x22, 0x00, 0x00, 0xe1 };
+	static const byte disks_install[13] = { 0xf4, 0xfb, 0x00, 0xf4, 0x00,
+		0x00, 0xa2, 0x05, 0x0f, 0x22, 0x00, 0x00, 0xe1 };
+	byte	*raw;
+	word32	off;
+	int	i;
+
+	g_disks_cda_on = 0;
+	if((DISKS_CDA_LEN == 0) || (g_rom_version != 3)) {
+		return;
+	}
+	if(memcmp(&g_rom_fc_ff_ptr[DCDA_ROM_OFF], adm_install, 13) != 0) {
+		printf("Disks CDA: ROM 03 code not found, not installed\n");
+		return;
+	}
+	if(!g_disks_fb_mem) {
+		raw = (byte *)malloc(0x10000 + 256);
+		if(!raw) {
+			return;
+		}
+		g_disks_fb_mem = (byte *)(((size_t)raw + 255) & ~(size_t)255);
+	}
+	memset(g_disks_fb_mem, 0, 0x10000);
+	memcpy(&g_disks_fb_mem[DCDA_BASE], g_disks_cda, DISKS_CDA_LEN);
+	for(i = 0; i < DISKS_CDA_NREL16; i++) {	// 16-bit addresses
+		off = DCDA_BASE + g_disks_cda_rel16[i];
+		dcda_put(off, (dcda_get(off, 2) + DCDA_BASE) & 0xffff, 2);
+	}
+	for(i = 0; i < DISKS_CDA_NREL32; i++) {	// 4-byte pointers
+		off = DCDA_BASE + g_disks_cda_rel32[i];
+		dcda_put(off, dcda_get(off, 4) + 0xfb0000 + DCDA_BASE, 4);
+	}
+	dcda_put(0, 0xfb0000 + DCDA_BASE, 4);	// the "handle"
+	memcpy(&g_disks_fb_mem[DCDA_STUB], adm_install, 13);
+	memcpy(&g_disks_fb_mem[DCDA_STUB + 13], disks_install, 13);
+	g_disks_fb_mem[DCDA_STUB + 26] = 0x6b;	// RTL
+
+	g_rom_fc_ff_ptr[DCDA_ROM_OFF + 0] = 0x22;	// JSL $FB0010
+	g_rom_fc_ff_ptr[DCDA_ROM_OFF + 1] = DCDA_STUB;
+	g_rom_fc_ff_ptr[DCDA_ROM_OFF + 2] = 0x00;
+	g_rom_fc_ff_ptr[DCDA_ROM_OFF + 3] = 0xfb;
+	for(i = 4; i < 13; i++) {
+		g_rom_fc_ff_ptr[DCDA_ROM_OFF + i] = 0xea;	// NOP
+	}
+	g_disks_cda_on = 1;
+	printf("Disks CDA: built in (%d bytes at $FB%04X)\n", DISKS_CDA_LEN,
+								DCDA_BASE);
 }
