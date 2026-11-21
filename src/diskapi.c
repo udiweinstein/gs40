@@ -15,7 +15,10 @@
 //  into a drive, eject, and see what is in each drive.
 //
 // Call it with the 3 bytes $42,$EA,$D8 ("WDM $EA" followed by CLD):
-//	A = command, X/Y = address (low/high) of a parameter block in bank 0
+//	A = command, X/Y = address (low/high) of a parameter block in the
+//	data bank (B register: bank 0 for 65C02 programs; a IIgs desk
+//	accessory can keep its block and buffers in its own bank).  The
+//	buffer addresses in the block are in the same bank.
 //	Returns A = result, carry clear = OK, carry set = error (A = code)
 // Safe everywhere, so a program can test for it: LDA #0, call, 'K' = yes.
 //  - real 65C02 / 65816: $42,$EA is a 2-byte NOP, then CLD
@@ -71,6 +74,7 @@ typedef struct dapi_entry {
 } Dapi_entry;
 
 Dapi_entry g_dapi_list[DAPI_MAX_ENTRIES];
+word32	g_dapi_bank = 0;		// Data bank << 16, for this call
 int	g_dapi_list_num = 0;
 char	g_dapi_list_dir[1024];
 
@@ -138,14 +142,14 @@ dapi_compare(const void *a, const void *b)
 static word32
 dapi_get16(word32 addr)
 {
-	return get_memory_c(addr & 0xffff) |
-				(get_memory_c((addr + 1) & 0xffff) << 8);
+	return get_memory_c((addr & 0xffff) | g_dapi_bank) |
+		(get_memory_c(((addr + 1) & 0xffff) | g_dapi_bank) << 8);
 }
 
 static void
 dapi_put(word32 addr, word32 val)
 {
-	set_memory_c(addr & 0xffff, val & 0xff, 1);
+	set_memory_c((addr & 0xffff) | g_dapi_bank, val & 0xff, 1);
 }
 
 // Write a name (ASCII, at most max chars) at addr: length, chars
@@ -213,10 +217,10 @@ dapi_list(word32 blk)
 	int	max, sub_len, num, i, c;
 
 	buf = dapi_get16(blk);
-	max = get_memory_c((blk + 2) & 0xffff);
-	sub_len = get_memory_c((blk + 3) & 0xffff) & 0x3f;
+	max = get_memory_c(((blk + 2) & 0xffff) | g_dapi_bank);
+	sub_len = get_memory_c(((blk + 3) & 0xffff) | g_dapi_bank) & 0x3f;
 	for(i = 0; i < sub_len; i++) {
-		c = get_memory_c((blk + 4 + i) & 0xffff) & 0x7f;
+		c = get_memory_c(((blk + 4 + i) & 0xffff) | g_dapi_bank) & 0x7f;
 		sub[i] = c;
 	}
 	sub[sub_len] = 0;
@@ -326,9 +330,9 @@ dapi_mount(word32 blk)
 	char	path[1100];
 	int	idx, sd, slot, drive, prot;
 
-	idx = get_memory_c(blk & 0xffff);
-	sd = get_memory_c((blk + 1) & 0xffff);
-	prot = get_memory_c((blk + 2) & 0xffff);
+	idx = get_memory_c((blk & 0xffff) | g_dapi_bank);
+	sd = get_memory_c(((blk + 1) & 0xffff) | g_dapi_bank);
+	prot = get_memory_c(((blk + 2) & 0xffff) | g_dapi_bank);
 	if((idx >= g_dapi_list_num) || g_dapi_list[idx].is_dir) {
 		return -DAPI_ERR_BADENTRY;
 	}
@@ -359,7 +363,7 @@ dapi_eject(word32 blk)
 	Disk	*dsk;
 	int	sd, slot, drive;
 
-	sd = get_memory_c((blk + 1) & 0xffff);
+	sd = get_memory_c(((blk + 1) & 0xffff) | g_dapi_bank);
 	if(!dapi_check_drive(sd, &slot, &drive)) {
 		return -DAPI_ERR_BADDRIVE;
 	}
@@ -418,10 +422,11 @@ disk_api_call()
 	int	cmd, ret;
 
 	cmd = engine.acc & 0xff;
+	g_dapi_bank = (engine.dbank & 0xff) << 16;
 	blk = (engine.xreg & 0xff) | ((engine.yreg & 0xff) << 8);
 	switch(cmd) {
 	case 0:
-		engine.xreg = (engine.xreg & 0xff00) | 1;	// API version
+		engine.xreg = (engine.xreg & 0xff00) | 2;	// API 2: B = bank
 		ret = 'K';
 		break;
 	case 1:

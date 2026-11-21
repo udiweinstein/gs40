@@ -12,6 +12,9 @@ an F4 network menu with SMB file sharing, and the original Apple II keyboard wit
 - Mac: `./build.sh` builds `GS40.app`
 - Raspberry Pi 4 SD card: `./buildroot/build-on-mac.sh` builds `sdcard/gs40-pi4-sdcard.img`
 - Raspberry Pi OS Lite: `pi-update.sh` builds `gs40`
+- Disks desk accessory (Ctrl-Cmd-Esc > Disks: choose a disk image for each drive):
+  `cda/build.sh` builds `cda/DISKS` (needs cc65: `brew install cc65`); copy it into
+  `SYSTEM/DESK.ACCS` on the GS/OS boot disk
 
 GS40 is released under the GNU GPL v3, like KEGS (see `LICENSE`).
 
