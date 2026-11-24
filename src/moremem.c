@@ -1641,6 +1641,13 @@ io_write(word32 loc, word32 val, dword64 *cyc_ptr)
 #endif
 			return;
 		case 0x2b: /* 0xc02b */
+			// Bits 7-5: display language (LANGSEL).  The ROM writes it
+			//  from the Control Panel; a program can also set it, e.g.
+			//  POKE 49195,(PEEK(49195) AND 31)+224 for language 7 =
+			//  Hebrew, as on the MiSTer core.  Follow it.
+			if(((val ^ g_c02b_val) & 0xe0) != 0) {
+				video_set_cp_language((val >> 5) & 7);
+			}
 			g_c02b_val = val;
 			if((val != 0x08) && (val != 0x00)) {
 				printf("Writing c02b with %02x\n", val);

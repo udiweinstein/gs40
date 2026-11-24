@@ -12,6 +12,9 @@ an F4 network menu with SMB file sharing, and the original Apple II keyboard wit
 - Mac: `./build.sh` builds `GS40.app`
 - Raspberry Pi 4 SD card: `./buildroot/build-on-mac.sh` builds `sdcard/gs40-pi4-sdcard.img`
 - Raspberry Pi OS Lite: `pi-update.sh` builds `gs40`
+- Hebrew on/off: F4, or the IIgs Control Panel (Keyboard > Display Language > Hebrew), or
+  from a program: `POKE 49195,(PEEK(49195) AND 31)+224` (on), `POKE 49195,PEEK(49195) AND 31`
+  (off) -- the same as on the MiSTer Apple IIgs core
 - Disks desk accessory (Ctrl-Cmd-Esc > Disks: choose a disk image for each drive, also under
   ProDOS 8): `cda/build.sh` (needs cc65: `brew install cc65`) builds it into GS40 (then run
   `./build.sh`), and also makes `cda/DISKS#b90000` for `SYSTEM/DESK.ACCS` on other machines
